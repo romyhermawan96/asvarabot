@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Output files
+result.txt
+
+# Ruby
+*.gem
+*.rbc
+.bundle
+.config
+coverage
+InstalledFiles
+lib/bundler/man
+pkg
+rdoc
+spec/reports
+test/tmp
+test/version_tmp
+tmp
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+RENDER_DEPLOY_GUIDE.md
