@@ -12,15 +12,18 @@ class TelegramBot
   def initialize
     validate_config
     @last_update_id = 0
+    @last_keepalive = Time.now
     puts "🤖 Telegram Bot Started"
     puts "=" * 50
     puts "Waiting for messages..."
-    puts "Send me a booking message to parse!\n\n"
+    puts "Send me a booking message to parse!"
+    puts "⏰ Keep-alive ping every 5 minutes\n\n"
   end
 
   def start
     loop do
       process_updates
+      send_keepalive_if_needed
       sleep 2
     end
   rescue Interrupt
@@ -222,7 +225,7 @@ class TelegramBot
 
   def format_success_message(data)
     <<~MESSAGE.strip
-      ✅ <b>Booking berhasil diparsing!</b>
+      🔔 <b>JADWAL SURVEY BARU</b>
 
       📅 <b>Tanggal:</b> #{data[:date]}
       🕐 <b>Waktu:</b> #{data[:time]}
@@ -254,6 +257,34 @@ class TelegramBot
     end
   rescue StandardError => e
     puts "   ⚠️  Telegram error: #{e.message}"
+  end
+
+  def send_keepalive_if_needed
+    current_time = Time.now
+    seconds_since_last = current_time - @last_keepalive
+    
+    if seconds_since_last >= 300
+      ping_telegram_api
+      @last_keepalive = current_time
+    end
+  rescue StandardError => e
+    puts "⚠️  Keep-alive error: #{e.message}"
+  end
+
+  def ping_telegram_api
+    uri = URI("https://api.telegram.org/bot#{TELEGRAM_BOT_TOKEN}/getMe")
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.read_timeout = 5
+
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
+    
+    if response.code == '200'
+      puts "💓 Keep-alive ping (#{Time.now.strftime('%H:%M:%S')})"
+    end
+  rescue StandardError => e
+    puts "⚠️  Ping failed: #{e.message}"
   end
 end
 
